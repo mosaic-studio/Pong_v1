@@ -10,21 +10,27 @@ import android.view.View;
  * Created by Marlon on 17/05/2015.
  */
 public class SGView extends View {
+    private SGStepwatch mStepwatch          = new SGStepwatch();
     private Point mDimensions               = new Point();
     private boolean mHasStarted             = false;
+    private SGImageFactory mImageFactory;
+    private SGRenderer mRenderer;
 
     public SGView(Context context) {
         super(context);
+        mImageFactory = new SGImageFactory(context);
+        mRenderer = new SGRenderer();
     }
 
     @Override
     public void onDraw(Canvas canvas){
-        canvas.drawColor(Color.LTGRAY);
+        //canvas.drawColor(Color.LTGRAY);
+        step(canvas, mStepwatch.tick());
 
-        step(canvas);
+        invalidate();
     }
 
-    public void step(Canvas canvas){
+    public void step(Canvas canvas, float elapsedTimeInSeconds){
 
     }
 
@@ -39,11 +45,16 @@ public class SGView extends View {
         }
     }
 
-    protected void setup(){
-
-    }
+    protected void setup(){ }
 
     public Point getDimensions(){
         return mDimensions;
     }
+
+    public SGImageFactory getImageFactory(){
+        return mImageFactory;
+    }
+
+    public SGRenderer getRenderer(){ return mRenderer; }
+
 }

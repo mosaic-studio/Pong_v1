@@ -6,7 +6,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
+import me.lab11.marlon.praxv1.SGImage;
+import me.lab11.marlon.praxv1.SGImageFactory;
+import me.lab11.marlon.praxv1.SGRenderer;
 import me.lab11.marlon.praxv1.SGView;
 
 /**
@@ -18,27 +22,58 @@ public class GameView extends SGView {
     private final static int PADDLE_HEIGHT          = 92 * 3; // 92
     private final static int PADDLE_WIDTH           = 23 * 3; // 23
 
-    private Rect mBallDestination                   = new Rect();
-    private Rect mOpponentDestination               = new Rect();
-    private Rect mPlayerDestination                 = new Rect();
 
-    private Paint mTempPaint                         = new Paint();
+    private RectF mBallDestination                  = new RectF();
+    private RectF mOpponentDestination              = new RectF();
+    private RectF mPlayerDestination                = new RectF();
+    private Rect mTempImageSource                   = new Rect();
+
+
+    private final static int BALL_SPEED             = 120;
+    private final static int OPPONENT_SPEED         = 120;
+
+    private boolean mBallMoveRight                  = true;
+    private boolean mOpponentMoveDown               = true;
+
+
+    private SGImage mBallImage;
+    private SGImage mOpponentImage;
+    private SGImage mPlayerImage;
+
 
     public GameView(Context context) {
         super(context);
     }
 
     @Override
-    public void step(Canvas canvas){
-        mTempPaint.setColor(Color.RED);
+    public void step(Canvas canvas, float elapsedTimeInSeconds){
+        moveBall(elapsedTimeInSeconds);
+        moveOpponent(elapsedTimeInSeconds);
 
-        canvas.drawRect(mPlayerDestination, mTempPaint);
-        canvas.drawRect(mBallDestination, mTempPaint);
-        canvas.drawRect(mOpponentDestination, mTempPaint);
+        SGRenderer renderer = getRenderer();
+
+        renderer.beginDrawing(canvas, Color.BLACK);
+
+        mTempImageSource.set(0, 0, BALL_SIZE, BALL_SIZE);
+        renderer.drawImage(mBallImage, mTempImageSource, mBallDestination);
+
+        mTempImageSource.set(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT);
+        renderer.drawImage(mPlayerImage, mTempImageSource, mPlayerDestination);
+
+        mTempImageSource.set(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT);
+        renderer.drawImage(mOpponentImage, mTempImageSource, mOpponentDestination);
+
+        renderer.endDrawing();
     }
 
     @Override
     protected void setup(){
+        SGImageFactory imageFactory = getImageFactory();
+
+        mBallImage = imageFactory.createImage(R.drawable.ball);
+        mPlayerImage = imageFactory.createImage("player.png");
+        mOpponentImage = imageFactory.createImage("opponent.png");
+
         Point viewDimensions = getDimensions();
         Point viewCenter = new Point(viewDimensions.x / 2, viewDimensions.y / 2);
 
@@ -60,5 +95,68 @@ public class GameView extends SGView {
                 viewCenter.y - halfPaddleHeight, // Topo
                 viewDimensions.x - DISTANCE_FROM_EDGE, // Direita
                 viewCenter.y + halfPaddleHeight); // Base
+    }
+
+    public void moveBall(float elapsedTimeInSeconds){
+        Point viewDimensions = getDimensions();
+        if(mBallMoveRight){
+            mBallDestination.left += BALL_SPEED * elapsedTimeInSeconds;
+            mBallDestination.right += BALL_SPEED * elapsedTimeInSeconds;
+
+            if(mBallDestination.right >= viewDimensions.x){
+                mBallDestination.left = viewDimensions.x - BALL_SIZE;
+                mBallDestination.right = viewDimensions.x;
+
+                mBallMoveRight = false;
+            }
+        }else {
+            mBallDestination.left -= BALL_SPEED * elapsedTimeInSeconds;
+            mBallDestination.right -= BALL_SPEED * elapsedTimeInSeconds;
+            if (mBallDestination.left < 0) {
+
+                mBallDestination.left = 0;
+                mBallDestination.right = BALL_SIZE;
+                mBallMoveRight = true;
+            }
+        }
+    }
+
+    public void moveOpponent(float elapsedTimeInSeconds){
+        Point viewDimensions = getDimensions();
+
+        if(mOpponentMoveDown){
+            mOpponentDestination.top += OPPONENT_SPEED * elapsedTimeInSeconds;
+            mOpponentDestination.bottom += OPPONENT_SPEED * elapsedTimeInSeconds;
+            if(mOpponentDestination.bottom >= viewDimensions.y){
+                mOpponentDestination.top = viewDimensions.y - PADDLE_HEIGHT;
+                mOpponentDestination.bottom = viewDimensions.y;
+
+                mOpponentMoveDown = false;
+            }
+        }else {
+            mOpponentDestination.top -= OPPONENT_SPEED * elapsedTimeInSeconds;
+            mOpponentDestination.bottom -= OPPONENT_SPEED * elapsedTimeInSeconds;
+            if(mOpponentDestination.top < 0){
+                mOpponentDestination.top = 0;
+                mOpponentDestination.bottom = PADDLE_HEIGHT;
+
+                mOpponentMoveDown = true;
+            }
+        }
+    }
+
+    public void movePlayer(float x, float y){
+        Point viewDimensions = getDimensions();
+        mPlayerDestination.top += y;
+        mPlayerDestination.bottom += y;
+
+        if(mPlayerDestination.top < 0){
+            mPlayerDestination.top = 0;
+            mPlayerDestination.bottom = PADDLE_HEIGHT;
+        }
+        else if(mPlayerDestination.bottom > viewDimensions.y){
+            mPlayerDestination.top = viewDimensions.y - PADDLE_HEIGHT;
+            mPlayerDestination.bottom = viewDimensions.y;
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -16,7 +17,7 @@ import android.view.WindowManager;
 public class SGActivity extends Activity {
     public static final String TAG                  = "PraxGameEngineV1";
     private SGPreferences mPreferences              = null;
-
+    protected SGInputPlublisher mInputPublisher     = null;
 
     public enum SGOrientation{
         LANDSCAPE,
@@ -97,5 +98,21 @@ public class SGActivity extends Activity {
     public SGPreferences getPreferences(){
         return mPreferences;
     }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event){
+        if(mInputPublisher != null){
+            return mInputPublisher.onTouchEvent(event);
+        } else {
+            return false;
+        }
+    }
+
+    public void setInputPublisher(SGInputPlublisher inputPublisher){
+        mInputPublisher = inputPublisher;
+    }
+
+    public SGInputPlublisher getInputPublisher(){ return mInputPublisher; }
 
 }
